@@ -76,7 +76,7 @@
   /* ---------- LocalStore ---------- */
   function LocalStore(opts) {
     opts = opts || {};
-    this.key = opts.key || 'mv.v3'; // bump when the seed schema changes
+    this.key = opts.key || 'mv.v4'; // bump when the seed schema changes
     this.contentBase = opts.contentBase || 'content/';
     this._ready = null;
   }
