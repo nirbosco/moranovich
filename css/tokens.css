@@ -1,0 +1,185 @@
+/* ==========================================================================
+   Moranovich · design tokens
+   Concept: "מבט מהמקפצה" (view from the starting block). See ../../02-design-brief.md
+   Light theme only (color-scheme: light). A sunlit pool is the concept.
+   Contrast ratios: WCAG 2.1 relative luminance, computed 2026-09-26.
+   AA thresholds: 4.5 normal text, 3.0 large text (24px, or 18.66px bold) and UI.
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Karantina:wght@400;700&family=Assistant:wght@400;600;700;800&display=swap");
+/* Prefer a <link rel="preconnect"> + <link rel="stylesheet"> in <head> over this @import in production. */
+
+:root {
+  color-scheme: light;
+
+  /* ---------- Brand core (exact, approved) ---------- */
+  --brown:        #7E7061;  /* on white 4.80 · on ground 4.57 · white on it 4.80 · text 16px+ and labels */
+  --aqua:         #92F6F8;  /* on white 1.25 → surfaces, water, thick lines only · ink on it 12.72 */
+  --pink:         #DE1B87;  /* white on it 4.55 (AA) → primary CTA, weight 800, 17px+ · on white 4.55 */
+
+  /* ---------- Brown ramp (text + structure) ---------- */
+  --brown-50:     #F7F4F1;  /* warm neutral surface */
+  --brown-100:    #EDE7E1;
+  --brown-300:    #B5A99C;  /* decorative only */
+  --brown-700:    #5F5449;  /* on white 7.37 · on aqua-100 6.96 · white on it 7.37 · aqua on it 5.88 */
+  --brown-900:    #3B332C;  /* on white 12.38 · aqua on it 9.88 */
+
+  /* ---------- Ink (warm, derived from brown) ---------- */
+  --ink:          #26211D;  /* on white 15.94 · on ground 15.18 · on aqua 12.72 · on aqua-200 14.08 */
+  --ink-soft:     #5A5048;  /* on white 7.85 · on ground 7.48 → secondary body text */
+  --muted:        #6B6159;  /* on white 6.04 · on ground 5.75 → captions, meta */
+
+  /* ---------- Water ramp (aqua tints for surfaces) ---------- */
+  --aqua-50:      #F3FEFE;  /* pool floor top · highlighted lane · chips */
+  --aqua-100:     #E6FDFD;  /* pool floor bottom · call button · toasts · ink on it 15.05 */
+  --aqua-200:     #C9FAFB;  /* caustic troughs · hover on aqua surfaces · ink on it 14.08 */
+  --aqua-400:     #BFE9EC;  /* back wave layer, dashed lane rope */
+  --aqua-800:     #0F6E75;  /* on white 5.99 · on aqua-100 5.65 → the only aqua-family text colour on light */
+
+  /* ---------- Pink ramp ---------- */
+  --pink-50:      #FEF3F9;
+  --pink-100:     #FCE4F1;  /* ink on it 13.29 · pink-700 on it 5.56 */
+  --pink-700:     #B0136A;  /* on white 6.67 · white on it 6.67 → small pink text, CTA pressed state */
+  /* pink on ink 3.50 → large display only. pink on aqua 3.63 → large display only. */
+
+  /* ---------- Surfaces & lines ---------- */
+  --white:        #FFFFFF;
+  --paper:        #FBFEFE;  /* page background */
+  --ground:       #F3FBFB;  /* studio background, alternate sections */
+  --surface:      #FFFFFF;  /* cards */
+  --line:         #DCEBEB;  /* hairlines, input borders at rest */
+  --line-strong:  #C3D9D9;
+  --lane-rope:    var(--aqua-400);  /* dashed separator between lanes */
+  --lane-line:    var(--brown-700); /* pool-floor lane stripe in hero */
+
+  /* ---------- Medals (decorative; always paired with the word) ---------- */
+  --gold:         #D4AF37;
+  --silver:       #B9C0C4;
+  --bronze:       #B87B4F;
+
+  /* ---------- Semantic roles ---------- */
+  --text:             var(--ink);
+  --text-soft:        var(--ink-soft);
+  --text-muted:       var(--muted);
+  --text-accent:      var(--brown-700);
+  --text-on-dark:     var(--white);
+  --text-accent-dark: var(--aqua);      /* on brown-700 5.88 */
+
+  --cta-bg:           var(--pink);
+  --cta-bg-hover:     #C9187A;          /* white on it 5.39 */
+  --cta-bg-active:    var(--pink-700);
+  --cta-fg:           var(--white);
+  --cta2-bg:          var(--aqua-100);
+  --cta2-bg-hover:    var(--aqua-200);
+  --cta2-fg:          var(--ink);
+  --cta3-border:      var(--brown);     /* 4.80 vs white, UI ≥ 3.0 */
+  --cta3-fg:          var(--ink);
+  --studio-primary:   var(--brown-700); /* white on it 7.37 */
+
+  --focus-ring:       var(--ink);
+  --focus-offset:     var(--white);
+  --success-bg:       var(--aqua-100);
+  --success-fg:       var(--ink);
+  --error-fg:         var(--pink-700);  /* 6.67 on white; pair with icon + text */
+
+  --footer-bg:        var(--brown-700);
+  --footer-fg:        var(--white);     /* 7.37 */
+
+  /* ---------- Hero caustics ---------- */
+  --caustics-floor-top:    var(--aqua-50);
+  --caustics-floor-bottom: var(--aqua-100);
+  --caustics-light:        #FFFFFF;
+  --caustics-tint:         rgba(146, 246, 248, .55); /* --aqua @ 55% */
+  --caustics-trough:       var(--aqua-200);
+  --caustics-veil:         radial-gradient(60% 55% at 85% 30%, rgba(255,255,255,.7), rgba(255,255,255,0) 70%);
+  --caustics-speed:        0.15;  /* shader time multiplier; ~12s perceived cycle */
+  --caustics-res-mobile:   0.5;   /* render scale */
+  --caustics-dpr-max:      1.5;
+
+  /* ---------- Typography ---------- */
+  --font-display: "Karantina", "Assistant", "Arial Hebrew", sans-serif;
+  --font-body:    "Assistant", "Arial Hebrew", "Segoe UI", system-ui, sans-serif;
+
+  /* Display: Karantina 700, tight leading */
+  --fs-hero:      clamp(4rem, 17vw, 8rem);        /* 64 → 128px · lh .86 */
+  --fs-h2:        clamp(2.5rem, 9vw, 3.75rem);    /* 40 → 60px  · lh 1   */
+  --fs-h3:        clamp(1.75rem, 5vw, 2.25rem);   /* 28 → 36px  · lh 1   */
+  --fs-venue:     clamp(2.25rem, 8vw, 2.75rem);   /* 36 → 44px, venue name on heat card */
+  --fs-lane-num:  2.75rem;                        /* 44px, pink allowed (large) */
+  --fs-rank:      2.5rem;                         /* 40px, results rank */
+  --lh-display:   .86;
+  --lh-heading:   1;
+
+  /* Body: Assistant */
+  --fs-lead:      clamp(1.125rem, 2.4vw, 1.25rem); /* 18 → 20px */
+  --fs-role:      1.3125rem;                       /* 21px, weight 700 */
+  --fs-body:      clamp(1.0625rem, 1.2vw, 1.125rem); /* 17 → 18px */
+  --fs-ui:        1.0625rem;                       /* 17px buttons + inputs (≥16 avoids iOS zoom) */
+  --fs-small:     .9375rem;                        /* 15px labels, chips */
+  --fs-micro:     .8125rem;                        /* 13px, ink/brown-700 only */
+  --fs-eyebrow:   .6875rem;                        /* 11px latin caps, letter-spacing .3em */
+  --lh-body:      1.6;
+  --lh-tight:     1.25;
+  --tracking-latin: .3em;
+  --fw-regular: 400; --fw-semibold: 600; --fw-bold: 700; --fw-heavy: 800;
+
+  /* ---------- Spacing (4px base) ---------- */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px; --sp-5: 20px;
+  --sp-6: 24px; --sp-7: 32px; --sp-8: 40px; --sp-9: 56px; --sp-10: 72px; --sp-11: 96px;
+  --gutter:       var(--sp-5);   /* mobile side padding */
+  --section-gap:  var(--sp-10);  /* 72px mobile, see media query */
+  --container:    1120px;
+  --measure:      62ch;
+  --tap-min:      48px;
+  --btn-h:        56px;
+  --input-h:      52px;
+
+  /* ---------- Radii ---------- */
+  --r-xs: 4px;    /* rope capsules */
+  --r-sm: 8px;
+  --r-md: 12px;   /* inputs */
+  --r-lg: 16px;   /* buttons, lane frame */
+  --r-xl: 20px;   /* cards, heat card */
+  --r-pool: 28px; /* hero pool window */
+  --r-pill: 999px;
+
+  /* ---------- Shadows (warm, brown-tinted) ---------- */
+  --shadow-hair:  0 1px 0 rgba(38, 33, 29, .06);
+  --shadow-card:  0 1px 2px rgba(38, 33, 29, .06), 0 8px 24px -12px rgba(38, 33, 29, .18);
+  --shadow-float: 0 2px 4px rgba(38, 33, 29, .06), 0 24px 48px -24px rgba(38, 33, 29, .32);
+  --shadow-chip:  0 1px 2px rgba(38, 33, 29, .08), 0 4px 12px -6px rgba(38, 33, 29, .16);
+  --shadow-cta:   0 8px 18px -10px rgba(176, 19, 106, .55);  /* pink-700 glow */
+  --shadow-cta-hover: 0 12px 24px -12px rgba(176, 19, 106, .6);
+
+  /* ---------- Motion ---------- */
+  --dur-instant: 120ms;  /* press */
+  --dur-fast:    200ms;  /* hover, focus */
+  --dur-base:    320ms;  /* reveals, toggles */
+  --dur-slow:    600ms;  /* caustics fade-in, section reveals */
+  --dur-intro:   1200ms; /* logo intro */
+  --stagger-lane:   120ms;
+  --stagger-result: 60ms;
+  --ease-out:    cubic-bezier(.22, 1, .36, 1);    /* default for entrances */
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);    /* toggles, panels */
+  --ease-water:  cubic-bezier(.37, 0, .63, 1);    /* sine, loops and waves */
+  --reveal-shift: 8px;
+  --ripple-interval: 8s;
+  --ripple-max-plays: 3;
+}
+
+@media (min-width: 900px) {
+  :root {
+    --gutter: var(--sp-7);
+    --section-gap: var(--sp-11);
+    --caustics-res-mobile: 0.75;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-instant: 0ms; --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms; --dur-intro: 0ms;
+    --stagger-lane: 0ms; --stagger-result: 0ms; --reveal-shift: 0px;
+    --caustics-speed: 0;  /* JS: skip WebGL entirely, keep poster */
+    --ripple-max-plays: 0;
+  }
+}
