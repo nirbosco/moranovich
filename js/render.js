@@ -140,6 +140,7 @@
       photo: (isVenue && v.heroUrl) || get(base, 'hero.photo', ''),
       photoAlt: get(base, 'hero.photoAlt', ''),
       video: (isVenue && v.heroVideo) || get(base, 'hero.video', ''),
+      videoWebm: (isVenue && v.heroVideo) ? (v.heroVideoWebm || '') : get(base, 'hero.videoWebm', ''),
       videoPoster: (isVenue && v.heroPoster) || get(base, 'hero.videoPoster', '') || get(base, 'hero.photo', ''),
       lanes: lanes,
       marking: marking
@@ -169,15 +170,32 @@
   }
 
   function heroMedia(m) {
+    // The cutout of Moran always stays in the composition. When there is a loop,
+    // it plays inside the 4:5 pool window and she overlaps its lower edge.
+    var cut = m.photo ?
+      '<div class="mv-pool-cut">' +
+        '<span class="mv-pool-sun" aria-hidden="true"></span>' +
+        '<img class="mv-pool-img" src="' + esc(m.photo) + '" alt="' + esc(m.photoAlt) + '" width="364" height="495" decoding="async" fetchpriority="high">' +
+      '</div>' : '';
     if (m.video) {
+      // Calm by default: when the reader asked for less motion, or is saving
+      // data, the still frame stands in and a button offers the loop.
+      var quiet = prefersReducedMotion() || saveData();
+      var sources = '';
+      if (m.videoWebm) sources += '<source ' + (quiet ? 'data-src' : 'src') + '="' + esc(m.videoWebm) + '" type="video/webm">';
+      sources += '<source ' + (quiet ? 'data-src' : 'src') + '="' + esc(m.video) + '" type="video/mp4">';
       return '<figure class="mv-pool mv-pool--video">' +
-        '<video class="mv-pool-video" muted loop playsinline preload="metadata" poster="' + esc(m.videoPoster) + '" data-src="' + esc(m.video) + '" aria-label="' + esc(m.photoAlt) + '"></video>' +
-        '<button type="button" class="mv-video-play" hidden aria-label="הפעלת הסרטון">' + icon('play') + '</button></figure>';
+        '<div class="mv-pool-window">' +
+          '<img class="mv-pool-still" src="' + esc(m.videoPoster) + '" alt="' + esc(m.photoAlt || '') + '" decoding="async" fetchpriority="high">' +
+          '<video class="mv-pool-video" muted loop playsinline tabindex="-1" aria-hidden="true"' +
+            (quiet ? ' preload="none"' : ' autoplay preload="auto"') +
+            ' poster="' + esc(m.videoPoster) + '" style="background-image:url(&quot;' + esc(m.videoPoster) + '&quot;)">' + sources + '</video>' +
+          '<button type="button" class="mv-video-play"' + (quiet ? '' : ' hidden') + ' aria-label="הפעלת הסרטון">' + icon('play') + '</button>' +
+        '</div>' + cut + '</figure>';
     }
-    if (!m.photo) return '';
+    if (!cut) return '';
     // cutout on one aqua circle, rising out of the hero water line (.mv-water)
-    return '<figure class="mv-pool"><span class="mv-pool-sun" aria-hidden="true"></span>' +
-      '<img class="mv-pool-img" src="' + esc(m.photo) + '" alt="' + esc(m.photoAlt) + '" width="364" height="495" decoding="async" fetchpriority="high"></figure>';
+    return '<figure class="mv-pool mv-pool--photo">' + cut + '</figure>';
   }
 
   function waves() {
@@ -232,7 +250,17 @@
     return '<section class="mv-sec" aria-labelledby="mv-lanes-h"><div class="mv-wrap">' +
       '<h2 class="mv-h2" id="mv-lanes-h">' + esc(base.lanesTitle || 'ארבעה מסלולים') + '</h2>' +
       '<ol class="mv-lanes">' + items + '</ol>' +
-      (base.lanesClosing ? '<p class="mv-lanes-close">' + esc(base.lanesClosing) + '</p>' : '') + '</div></section>';
+      (base.lanesClosing && !base.bandPhoto ? '<p class="mv-lanes-close">' + esc(base.lanesClosing) + '</p>' : '') +
+      '</div></section>';
+  }
+
+  /* A quiet full-width band of the real lane photo, carrying the closing line.
+     It is the hand-off from "four lanes" to "about me". No photo, no band. */
+  function poolBand(base) {
+    var img = get(base, 'bandPhoto', '');
+    if (!img || !base.lanesClosing) return '';
+    return '<aside class="mv-band" style="background-image:url(&quot;' + esc(img) + '&quot;)">' +
+      '<div class="mv-wrap"><p class="mv-band-line">' + esc(base.lanesClosing) + '</p></div></aside>';
   }
 
   function credList(base) {
@@ -247,7 +275,8 @@
   function aboutSec(base) {
     var a = base.about || {};
     var creds = [];
-    var photo = a.photo ? '<figure class="mv-about-photo"><img src="' + esc(a.photo) + '" alt="' + esc(a.photoAlt || '') + '" loading="lazy"></figure>' : '';
+    var photo = a.photo ? '<figure class="mv-about-photo"><span class="mv-about-blob" aria-hidden="true"></span>' +
+      '<img src="' + esc(a.photo) + '" alt="' + esc(a.photoAlt || '') + '" width="364" height="495" loading="lazy" decoding="async"></figure>' : '';
     var band = creds.length ? '<ul class="mv-creds" aria-label="' + esc(a.credentialsLabel || 'הישגים ותפקידים') + '">' +
       creds.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' : '';
     if (!a.title && !a.text && !band) return '';
@@ -304,7 +333,7 @@
     return '' +
       '<div class="mv-page' + (opts.preview ? ' is-preview' : '') + '">' +
       '<section class="mv-hero" aria-labelledby="mv-name">' +
-        '<div class="mv-caustics" aria-hidden="true"><canvas class="mv-caustics-c"></canvas></div>' +
+        '<div class="mv-caustics" aria-hidden="true"></div>' +
         '<div class="mv-veil" aria-hidden="true"></div>' +
         '<header class="mv-bar"><div class="mv-wrap mv-bar-in">' + mono('mv-mono') + '<span class="mv-bar-wm" lang="en">MORANOVICH</span></div></header>' +
         '<div class="mv-wrap mv-hero-in">' +
@@ -325,6 +354,7 @@
       noteCard(base, m) +
       rope() +
       lanesSec(base, m) +
+      poolBand(base) +
       aboutSec(base) +
       talkSec(base, m) +
       footer(base) +
@@ -381,15 +411,72 @@
     });
   }
 
-  function wireVideo(root) {
+  function wireVideo(root, cleanups) {
     var v = root.querySelector('.mv-pool-video');
     if (!v) return;
     var btn = root.querySelector('.mv-video-play');
-    var auto = !prefersReducedMotion() && !saveData();
-    function start() { if (!v.src) v.src = v.getAttribute('data-src'); var p = v.play(); if (p && p.catch) p.catch(function () { btn.hidden = false; }); btn.hidden = true; }
-    if (auto) { v.autoplay = true; start(); }
-    else btn.hidden = false;
-    btn.addEventListener('click', start);
+    var loaded = false, wanted = false, onScreen = true;
+
+    function load() {
+      if (loaded) return;
+      loaded = true;
+      var srcs = v.querySelectorAll('source'), need = false;
+      for (var i = 0; i < srcs.length; i++) {
+        var d = srcs[i].getAttribute('data-src');
+        if (d && !srcs[i].src) { srcs[i].src = d; need = true; }
+      }
+      if (need) v.load();
+    }
+    function start() {
+      wanted = true;
+      load();
+      // v.load() above kicks off a new load; playing in the same tick rejects
+      // with AbortError, so wait until there are frames to show and retry once.
+      var tries = 0;
+      function attempt() {
+        if (!wanted) return;
+        var p = v.play();
+        if (!p || !p.then) { if (btn) btn.hidden = true; return; }
+        p.then(function () { if (btn) btn.hidden = true; }, function (err) {
+          if (tries < 3 && err && err.name === 'AbortError') { tries++; setTimeout(attempt, 250); return; }
+          if (btn) btn.hidden = false;
+        });
+      }
+      if (v.readyState >= 2) attempt();
+      else v.addEventListener('loadeddata', attempt, { once: true });
+    }
+    if (btn) btn.addEventListener('click', start);
+
+    // Reduced motion or Save-Data: the poster stays, with the play button.
+    if (prefersReducedMotion() || saveData()) { if (btn) btn.hidden = false; return; }
+    wanted = true; loaded = true; // the markup already autoplays, so only keep it going
+
+    // Lazy start: only once the hero is actually on screen, and never before
+    // first paint, so the video does not compete with the fonts and the CSS.
+    function idle(fn) {
+      if (global.requestIdleCallback) global.requestIdleCallback(fn, { timeout: 1500 });
+      else setTimeout(fn, 400);
+    }
+    function pause() { if (!v.paused) v.pause(); }
+    function resume() { if (wanted && onScreen && !document.hidden) { var p = v.play(); if (p && p.catch) p.catch(function () {}); } }
+
+    if ('IntersectionObserver' in global) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          onScreen = en.isIntersecting;
+          if (!onScreen) pause();
+          else if (wanted) resume();
+          else if (en.isIntersecting) idle(start);
+        });
+      }, { threshold: 0.01 });
+      io.observe(v);
+      cleanups.push(function () { io.disconnect(); });
+    } else {
+      idle(start);
+    }
+    var onVis = function () { if (document.hidden) pause(); else resume(); };
+    document.addEventListener('visibilitychange', onVis);
+    cleanups.push(function () { document.removeEventListener('visibilitychange', onVis); pause(); });
   }
 
   function wireSticky(root, cleanups) {
@@ -445,16 +532,9 @@
     wireForm(root, base, m);
     wireScroll(root);
     if (!opts.preview) {
-      wireVideo(root);
+      wireVideo(root, cleanups);
       wireSticky(root, cleanups);
       wireTracking(root, venue);
-      if (MV.Caustics) {
-        var c = MV.Caustics.start(root.querySelector('.mv-hero'), root.querySelector('.mv-caustics-c'));
-        if (c) cleanups.push(c.destroy);
-      }
-    } else {
-      var pv = root.querySelector('.mv-pool-video');
-      if (pv) { pv.src = pv.getAttribute('data-src'); }
     }
     if (MV.Motion) {
       var mo = MV.Motion.attach(root, { still: !!opts.preview });

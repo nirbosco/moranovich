@@ -91,15 +91,25 @@
   display: flex; flex-direction: column; justify-content: center;
 }
 .mv-page.is-preview { --mv-hero-min: 0px; }
+/* The hero floor is the real photograph of the lane at sunrise (900x1200, 50KB),
+   over the water gradient. No shader, no canvas. */
 .mv-caustics {
-  position: absolute; inset: 0; z-index: -2;
-  /* poster: a still frame of the shader (assets/caustics-poster.webp, 11KB), gradient underneath */
-  background: url("../assets/caustics-poster.webp") center / cover no-repeat,
-    linear-gradient(180deg, var(--caustics-floor-top), var(--caustics-floor-bottom));
+  position: absolute; inset: 0; z-index: -2; overflow: hidden;
+  background: linear-gradient(180deg, var(--caustics-floor-top), var(--caustics-floor-bottom));
 }
-.mv-caustics-c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity var(--dur-slow) var(--ease-out); }
-.mv-caustics-c.is-on { opacity: 1; }
-.mv-veil { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(75% 45% at 80% 30%, rgba(255,255,255,.72), rgba(255,255,255,0) 72%); }
+/* The photograph lives in the pool window, which carries the whole hero. The
+   ground behind the type stays a quiet wash so the name and the CTA stay crisp. */
+.mv-caustics::before {
+  content: ""; position: absolute; inset: 0;
+  background: url("../assets/pool-lane-bg.webp") center 42% / cover no-repeat;
+  opacity: .14; filter: saturate(.8);
+}
+.mv-veil {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(251,254,254,.92) 0%, rgba(251,254,254,.74) 46%, rgba(251,254,254,.58) 76%, rgba(251,254,254,.88) 100%),
+    radial-gradient(78% 46% at 86% 22%, rgba(255,255,255,.85), rgba(255,255,255,0) 70%);
+}
 
 .mv-bar { position: absolute; inset-block-start: 0; inset-inline: 0; padding-block: 16px; }
 .mv-bar-in { display: flex; align-items: center; gap: 10px; }
@@ -139,16 +149,36 @@
 .mv-lead { font-size: var(--fs-lead); color: var(--ink-soft); max-width: 34ch; line-height: 1.55; }
 .mv-hero-text .mv-cta { width: 100%; max-width: 440px; margin-block-start: var(--sp-3); }
 
+/* ---------- hero pool window + cutout ----------
+   The loop plays inside the 4:5 window. Moran's real cutout stands on the aqua
+   circle and overlaps the window's lower edge, her feet ending in the wave. */
 .mv-pool {
   position: relative; width: min(100%, 380px); justify-self: center; align-self: end;
-  margin: 0; aspect-ratio: 364 / 495;
+  margin: 0; --cut-w: 52%;
 }
-.mv-pool-sun { position: absolute; width: 92%; aspect-ratio: 1; border-radius: 50%; background: var(--aqua); left: 50%; top: 14%; transform: translateX(-50%); }
-.mv-pool-img { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: auto; }
-.mv-pool--video { aspect-ratio: 4 / 5; border-radius: var(--r-pool); overflow: hidden; box-shadow: var(--shadow-float); align-self: center; margin-block-end: 72px; }
-.mv-pool-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.mv-pool--photo { aspect-ratio: 364 / 495; --cut-w: 100%; }
+.mv-pool--photo .mv-pool-cut { inset-inline: 0; }
+.mv-pool--video { padding-block-end: 84px; margin-block-end: 8px; align-self: center; --cut-sink: -30px; }
+.mv-pool-window {
+  position: relative; aspect-ratio: 4 / 5; border-radius: var(--r-pool); overflow: hidden;
+  box-shadow: var(--shadow-float); background: var(--aqua-100);
+}
+.mv-pool-window::after { /* keeps the rounded window reading as glass, not a raw crop */
+  content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.55);
+}
+.mv-pool-still { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+.mv-pool-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: none; z-index: 1; }
+
+.mv-pool-cut { position: absolute; bottom: var(--cut-sink, 0px); inset-inline-start: -4%; width: var(--cut-w); }
+.mv-pool-sun {
+  position: absolute; width: 112%; aspect-ratio: 1; border-radius: 50%; background: var(--aqua);
+  left: 50%; bottom: 16%; transform: translateX(-50%); z-index: 0;
+}
+.mv-pool--photo .mv-pool-sun { width: 92%; bottom: auto; top: 14%; }
+.mv-pool-img { position: relative; z-index: 1; display: block; width: 100%; height: auto; filter: drop-shadow(0 18px 24px rgba(38,33,29,.18)); }
 .mv-video-play {
-  position: absolute; inset-inline-end: 14px; bottom: 14px; width: 48px; height: 48px; border-radius: 50%;
+  position: absolute; inset-inline-end: 14px; top: 14px; width: 48px; height: 48px; border-radius: 50%;
   border: 0; background: var(--white); color: var(--ink); box-shadow: var(--shadow-chip); cursor: pointer; display: grid; place-items: center;
 }
 .mv-video-play .mv-ico { width: 22px; height: 22px; }
@@ -163,10 +193,10 @@
 @keyframes mv-drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* ---------- credentials band (under the hero) ---------- */
-.mv-creds-band { padding-block: var(--sp-2) var(--sp-4); }
+.mv-creds-band { background: var(--ground); border-block: 1px solid var(--line); }
 .mv-creds {
-  list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2) var(--sp-4);
-  padding-block: var(--sp-4); border-block: 1px solid var(--line-strong);
+  list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3) var(--sp-5);
+  padding-block: var(--sp-5);
 }
 .mv-creds li { display: flex; align-items: baseline; gap: 8px; font-size: var(--fs-small); font-weight: 700; color: var(--brown-700); line-height: 1.35; }
 .mv-creds li::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--aqua-800); flex: none; transform: translateY(-2px); }
@@ -197,7 +227,7 @@
 .mv-rope i:nth-child(4n+1), .mv-rope i:nth-child(4n+2) { background: var(--pink); }
 
 /* ---------- lanes ---------- */
-.mv-lanes { list-style: none; border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
+.mv-lanes { list-style: none; border-radius: var(--r-xl); overflow: hidden; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow-card); }
 .mv-lane { display: grid; grid-template-columns: auto 1fr; gap: var(--sp-4); align-items: center; padding: var(--sp-4) var(--sp-5); position: relative; }
 .mv-lane + .mv-lane { border-top: 2px dashed var(--lane-rope); }
 .mv-lane.is-avail { background: var(--aqua-50); }
@@ -215,13 +245,44 @@
 .mv-tag .mv-ico { width: 14px; height: 14px; }
 .mv-lanes-close { margin-block-start: var(--sp-5); font-family: var(--font-display); font-weight: 700; font-size: var(--fs-h3); line-height: 1; color: var(--brown-700); }
 
+/* ---------- pool band (the lane photo, carrying the closing line) ---------- */
+.mv-band {
+  position: relative; isolation: isolate;
+  min-height: 190px; display: grid; align-items: center;
+  background: var(--aqua-100) center 58% / cover no-repeat;
+  margin-block: var(--sp-6);
+}
+.mv-band::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(270deg, rgba(251,254,254,.92) 0%, rgba(251,254,254,.62) 40%, rgba(251,254,254,.08) 100%);
+}
+.mv-band-line {
+  font-family: var(--font-display); font-weight: 700; font-size: var(--fs-h2); line-height: 1;
+  color: var(--ink); text-shadow: 0 1px 0 rgba(255,255,255,.7);
+}
+
 /* ---------- about ---------- */
 .mv-about { display: grid; gap: var(--sp-6); }
 .mv-about-p { max-width: var(--measure); color: var(--ink-soft); font-size: var(--fs-body); }
-.mv-about-photo { aspect-ratio: 4/5; border-radius: var(--r-xl); overflow: hidden; }
-.mv-about-photo img { width: 100%; height: 100%; object-fit: cover; }
+.mv-about-photo {
+  position: relative; order: -1; display: grid; justify-items: center; align-items: end;
+  padding-block-start: var(--sp-4);
+}
+.mv-about-blob {
+  position: absolute; left: 50%; bottom: 0; width: min(340px, 94%); aspect-ratio: 1;
+  transform: translateX(-50%); border-radius: 52% 48% 44% 56% / 50% 44% 56% 50%;
+  background: linear-gradient(155deg, var(--aqua) 0%, var(--aqua-200) 68%, var(--aqua-50) 100%);
+}
+.mv-about-photo img {
+  position: relative; width: min(290px, 76%); height: auto; display: block;
+  filter: drop-shadow(0 14px 20px rgba(38,33,29,.14));
+  /* the cutout has a hard bottom edge: let it dissolve into the aqua shape */
+  -webkit-mask-image: linear-gradient(180deg, #000 72%, rgba(0,0,0,.35) 90%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 72%, rgba(0,0,0,.35) 90%, transparent 100%);
+}
 
 /* ---------- talk + form ---------- */
+.mv-talk { background: var(--ground); border-top: 1px solid var(--line); padding-block: var(--section-gap); }
 .mv-talk-in { display: grid; gap: var(--sp-7); }
 .mv-talk-head { display: grid; gap: var(--sp-3); align-content: start; }
 .mv-talk-head .mv-h2 { margin: 0; }
@@ -246,7 +307,7 @@
 .mv-btn-send:hover { background: var(--brown-900); }
 
 /* ---------- footer ---------- */
-.mv-foot { background: var(--footer-bg); color: var(--footer-fg); padding-block: var(--sp-8) calc(var(--sp-8) + 88px); margin-block-start: calc(var(--section-gap) / 2); }
+.mv-foot { background: var(--footer-bg); color: var(--footer-fg); padding-block: var(--sp-8) calc(var(--sp-8) + 88px); }
 .mv-foot-in { display: grid; gap: var(--sp-2); }
 .mv-foot-lock { display: flex; align-items: center; gap: var(--sp-4); margin-block-end: var(--sp-3); }
 .mv-foot-badge { position: relative; width: 64px; height: 64px; padding: 8px; background: var(--white); border-radius: var(--r-lg); flex: none; }
@@ -292,6 +353,7 @@
   .mv-lane-line::before { width: 38px; inset-inline-start: -12px; height: 14px; }
   .mv-name { font-size: var(--fs-hero); font-size: clamp(5rem, 9.5cqi, 8rem); }
   .mv-pool { width: min(100%, 440px); }
+  .mv-pool--video { padding-block-end: 104px; margin-block-end: 0; --cut-sink: -42px; }
 
   .mv-lanes { display: grid; grid-template-columns: repeat(4, 1fr); }
   .mv-lane { grid-template-columns: 1fr; align-content: start; align-items: start; padding: var(--sp-6) var(--sp-5) var(--sp-7); gap: var(--sp-4); }
@@ -300,10 +362,14 @@
   .mv-lane-num { font-size: 3.5rem; text-align: start; }
   .mv-lane-ico { width: 48px; height: 48px; }
 
-  .mv-about.has-photo { grid-template-columns: 1.4fr 1fr; align-items: center; }
+  .mv-band { min-height: 260px; margin-block: var(--sp-7); }
+  .mv-about.has-photo { grid-template-columns: 1.35fr 1fr; align-items: center; gap: var(--sp-9); }
+  .mv-about-photo { order: 0; padding-block-start: 0; }
+  .mv-about-photo img { width: min(310px, 92%); }
+  .mv-about-blob { width: min(380px, 100%); }
   .mv-about-p { font-size: var(--fs-lead); }
 
-  .mv-talk-in { grid-template-columns: 1fr 1.1fr; gap: var(--sp-9); align-items: start; }
+  .mv-talk-in { grid-template-columns: 1fr 1.1fr; gap: var(--sp-9); align-items: center; }
   .mv-form { padding: var(--sp-7); }
   .mv-foot { padding-block: var(--sp-9); }
   .mv-foot-in { grid-template-columns: 1fr auto; align-items: end; column-gap: var(--sp-8); }
