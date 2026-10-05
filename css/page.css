@@ -233,8 +233,9 @@
 .mv-lane.is-avail { background: var(--aqua-50); }
 .mv-lane-head { display: flex; align-items: center; gap: var(--sp-2); }
 .mv-lane-num { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-lane-num); line-height: 1; color: var(--pink); min-width: 26px; text-align: center; }
-.mv-lane-ico { width: 40px; height: 40px; display: block; }
-.mv-lane-ico:not(.has-lottie) { display: none; }
+.mv-lane-ico { position: relative; width: 40px; height: 40px; display: block; flex: none; }
+.mv-lane-ico > .mv-static { display: block; width: 100%; height: 100%; transition: opacity var(--dur-base) var(--ease-out); }
+.mv-lane-ico .mv-lottie { position: absolute; inset: 0; }
 .mv-lane-body h3 { font-size: var(--fs-body); font-weight: 800; line-height: 1.3; color: var(--ink); }
 .mv-lane-body p { font-size: var(--fs-small); color: var(--muted); line-height: 1.45; margin-block-start: 2px; }
 .mv-tag {
@@ -243,6 +244,32 @@
   background: var(--white); border: 1px solid var(--pink-100); border-radius: var(--r-pill); padding: 2px 10px 2px 8px;
 }
 .mv-tag .mv-ico { width: 14px; height: 14px; }
+
+/* ---------- the convenience line (under the lanes, one quiet line) ---------- */
+.mv-conv {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--sp-2);
+  margin-block-start: var(--sp-5); font-size: var(--fs-small); color: var(--brown-700); line-height: 1.5;
+}
+.mv-conv .mv-ico { width: 18px; height: 18px; color: var(--aqua-800); align-self: center; }
+.mv-conv b { font-weight: 800; color: var(--ink); }
+.mv-conv i { font-style: normal; color: var(--line-strong); }
+
+/* ---------- למי זה מתאים ---------- */
+.mv-fit-list {
+  list-style: none; display: grid; margin-block-start: calc(var(--sp-2) * -1);
+  border-block-end: 1px solid var(--line);
+}
+.mv-fit-list li {
+  display: grid; grid-template-columns: auto 1fr; gap: var(--sp-3); align-items: start;
+  padding-block: var(--sp-3); border-block-start: 1px solid var(--line);
+  font-size: var(--fs-body); color: var(--ink-soft); line-height: 1.5;
+}
+.mv-fit-b {
+  width: 24px; height: 24px; border-radius: 50%; background: var(--aqua-200); color: var(--aqua-800);
+  display: grid; place-items: center; margin-block-start: 2px;
+}
+.mv-fit-b .mv-ico { width: 14px; height: 14px; }
+.mv-fit-note { margin-block-start: var(--sp-4); font-size: var(--fs-small); color: var(--muted); }
 .mv-lanes-close { margin-block-start: var(--sp-5); font-family: var(--font-display); font-weight: 700; font-size: var(--fs-h3); line-height: 1; color: var(--brown-700); }
 
 /* ---------- pool band (the lane photo, carrying the closing line) ---------- */
@@ -262,8 +289,16 @@
 }
 
 /* ---------- about ---------- */
+/* On a venue page the lanes Moran offers there carry the "זמין אצלכם" tag;
+   the rest stay readable and simply step back. */
+.mv-lane.is-dim { opacity: .62; }
+.mv-lane.is-dim .mv-lane-n { color: var(--brown-300); }
+@media (prefers-reduced-transparency: reduce) { .mv-lane.is-dim { opacity: 1; } }
+
 .mv-about { display: grid; gap: var(--sp-6); }
-.mv-about-p { max-width: var(--measure); color: var(--ink-soft); font-size: var(--fs-body); }
+.mv-about-text { display: grid; gap: var(--sp-4); }
+.mv-about-text .mv-h2 { margin-block-end: var(--sp-1); }
+.mv-about-p { max-width: 65ch; color: var(--ink-soft); font-size: var(--fs-body); line-height: 1.65; }
 .mv-about-photo {
   position: relative; order: -1; display: grid; justify-items: center; align-items: end;
   padding-block-start: var(--sp-4);
@@ -355,15 +390,32 @@
   .mv-pool { width: min(100%, 440px); }
   .mv-pool--video { padding-block-end: 104px; margin-block-end: 0; --cut-sink: -42px; }
 
+  /* Lanes side by side. The count drives the grid, so four still reads as four
+     and five never leaves one card alone at the end of a row: three over two,
+     both rows filling the full width, until the pane is wide enough for five. */
   .mv-lanes { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .mv-lanes[data-count="1"] { grid-template-columns: 1fr; }
+  .mv-lanes[data-count="2"] { grid-template-columns: repeat(2, 1fr); }
+  .mv-lanes[data-count="3"] { grid-template-columns: repeat(3, 1fr); }
+  .mv-lanes[data-count="5"] { grid-template-columns: repeat(6, 1fr); }
+  .mv-lanes[data-count="5"] > .mv-lane { grid-column: span 2; }
+  .mv-lanes[data-count="5"] > .mv-lane:nth-child(n+4) { grid-column: span 3; border-top: 2px dashed var(--lane-rope); }
+  .mv-lanes[data-count="5"] > .mv-lane:nth-child(4) { border-inline-start: 0; }
   .mv-lane { grid-template-columns: 1fr; align-content: start; align-items: start; padding: var(--sp-6) var(--sp-5) var(--sp-7); gap: var(--sp-4); }
   .mv-lane + .mv-lane { border-top: 0; border-inline-start: 2px dashed var(--lane-rope); }
   .mv-lane-head { justify-content: space-between; border-bottom: 3px solid var(--brown-700); padding-bottom: var(--sp-3); }
   .mv-lane-num { font-size: 3.5rem; text-align: start; }
   .mv-lane-ico { width: 48px; height: 48px; }
 
+  .mv-fit-list { grid-auto-flow: column; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(var(--fit-rows, 3), auto); column-gap: var(--sp-9); }
+  .mv-conv { margin-block-start: var(--sp-6); font-size: var(--fs-body); }
+
   .mv-band { min-height: 260px; margin-block: var(--sp-7); }
   .mv-about.has-photo { grid-template-columns: 1.35fr 1fr; align-items: center; gap: var(--sp-9); }
+  /* Until there is a real photograph of Moran for this section, the text
+     block is centred so the column does not sit against an empty half. */
+  .mv-about:not(.has-photo) { justify-items: center; }
+  .mv-about:not(.has-photo) .mv-about-text { width: min(100%, 72ch); }
   .mv-about-photo { order: 0; padding-block-start: 0; }
   .mv-about-photo img { width: min(310px, 92%); }
   .mv-about-blob { width: min(380px, 100%); }
@@ -387,4 +439,15 @@
   .mv *, .mv *::before, .mv *::after { transition-duration: 0ms !important; animation: none !important; }
   .mv-btn:hover { transform: none; }
 }
+
+/* Five lanes in one row, once the pane can carry five readable columns. */
+@container mv (min-width: 1180px) {
+  .mv-lanes[data-count="5"] { grid-template-columns: repeat(5, 1fr); }
+  .mv-lanes[data-count="5"] > .mv-lane { padding-inline: var(--sp-4); }
+  .mv-lanes[data-count="5"] > .mv-lane:nth-child(n+1) { grid-column: auto; }
+  .mv-lanes[data-count="5"] > .mv-lane:nth-child(n+4) { border-top: 0; }
+  .mv-lanes[data-count="5"] > .mv-lane:nth-child(4) { border-inline-start: 2px dashed var(--lane-rope); }
+  .mv-lanes[data-count="5"] .mv-lane-num { font-size: 3rem; }
+}
+
 .mv-page.is-preview .mv-wv { animation: none; }

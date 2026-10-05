@@ -70,6 +70,58 @@
     w: 'M13 85q9.25-8 18.5 0t18.5 0t18.5 0t18.5 0'
   };
   MV.MONOGRAM_PATHS = MONO;
+
+  /* ---------- static lane icons ----------
+     Every lane carries a drawn icon in the markup. When Lottie loads it mounts
+     on top and the drawing fades out (.has-lottie > .mv-static, same as the
+     logo). When Lottie is missing, blocked or slow, the drawing is what stays.
+     One flat language throughout: aqua disc, brown stroke, one magenta accent,
+     in the 120x120 box the Lottie lane files use. Lane five has no animation,
+     so its drawing is simply the final art. */
+  function laneSym(id, inner) {
+    return '<symbol id="mv-i-' + id + '" viewBox="0 0 120 120">' +
+      '<circle cx="60" cy="60" r="40" fill="var(--aqua,#92F6F8)"/>' + inner + '</symbol>';
+  }
+  var BRS = ' fill="none" stroke="var(--brown,#7E7061)" stroke-linecap="round" stroke-linejoin="round"';
+  var PKS = ' fill="none" stroke="var(--pink,#DE1B87)" stroke-linecap="round" stroke-linejoin="round"';
+  var LANE_SYMBOLS =
+    /* 1 · swim ring on the water: at home in the water */
+    laneSym('lane-ring',
+      '<g' + BRS + ' stroke-width="9"><circle cx="60" cy="56" r="17"/></g>' +
+      '<g' + PKS + ' stroke-width="9"><path d="M75.5 64.5 68.5 71.5"/><path d="M44.5 47.5 51.5 40.5"/></g>' +
+      '<g' + BRS + ' stroke-width="5"><path d="M34 84q6.5-5 13 0t13 0t13 0t13 0"/></g>') +
+    /* 2 · a calm face at the surface: making peace with the water */
+    laneSym('lane-calm',
+      '<g' + BRS + '><circle cx="60" cy="50" r="11" stroke-width="9"/>' +
+      '<path stroke-width="5" d="M26 76q8.5-6 17 0t17 0t17 0t17 0"/></g>' +
+      '<g' + PKS + ' stroke-width="6"><path d="M36 86q5-4.5 10 0"/><path d="M74 86q5-4.5 10 0"/></g>') +
+    /* 3 · a wavy line pulling straight: technique and efficiency */
+    laneSym('lane-line',
+      '<g' + BRS + ' stroke-width="9"><path d="M28 58q6.5-9 13 0t13 0h34"/></g>' +
+      '<g' + PKS + ' stroke-width="8"><path d="M78 50 88 58 78 66"/></g>' +
+      '<g' + BRS + ' stroke-width="5"><path d="M34 84q6.5-5 13 0t13 0t13 0t13 0"/></g>') +
+    /* 4 · a freestyle arm over the head: the strokes */
+    laneSym('lane-arm',
+      '<g' + BRS + ' stroke-width="9"><circle cx="50" cy="64" r="10"/><path d="M40 74Q50 34 80 46"/></g>' +
+      '<circle cx="82" cy="46" r="6" fill="var(--pink,#DE1B87)"/>' +
+      '<g' + BRS + ' stroke-width="5"><path d="M30 86q7-5 14 0t14 0t14 0t14 0"/></g>') +
+    /* 5 · a stopwatch: racing */
+    laneSym('lane-watch',
+      '<g' + BRS + ' stroke-width="9"><circle cx="60" cy="66" r="21"/><path d="M60 45v-7"/><path d="M52 38h16"/></g>' +
+      '<g' + PKS + ' stroke-width="8"><path d="M60 66 70 56"/></g>');
+
+  /* Which drawing belongs to which lane, by the lane number in the content, and
+     which Lottie file animates it. Lane two has no animation of its own: the
+     four Lottie files are mapped to the lanes they actually show.
+     Content may override per lane with "icon": "lane3" or "icon": "none". */
+  var LANE_ICON = {
+    1: { art: 'lane-ring',  anim: 'lane1' },
+    2: { art: 'lane-calm',  anim: '' },
+    3: { art: 'lane-line',  anim: 'lane3' },
+    4: { art: 'lane-arm',   anim: 'lane2' },
+    5: { art: 'lane-watch', anim: 'lane4' }
+  };
+  MV.LANE_ICON = LANE_ICON;
   function ensureSprite() {
     if (document.getElementById('mv-sprite')) return;
     var s = '<svg id="mv-sprite" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false"><defs>' +
@@ -87,6 +139,7 @@
       '<symbol id="mv-i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5" fill="currentColor"/></symbol>' +
       '<symbol id="mv-i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4.5L19 7.5"/></symbol>' +
       '<symbol id="mv-i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.5v13l10.5-6.5Z"/></symbol>' +
+      LANE_SYMBOLS +
       '</defs></svg>';
     var holder = document.createElement('div');
     holder.innerHTML = s;
@@ -115,15 +168,19 @@
     return b;
   }
   MV.withDefaults = withDefaults;
+  function laneNum(l) { return Number(l && (l.n != null ? l.n : l.id)); }
+  MV.laneNum = laneNum;
   function model(base, v) {
     var isVenue = !!(v && v.venue);
-    var lanesSel = (v && Array.isArray(v.lanes) && v.lanes.length) ? v.lanes.map(Number) : [1, 2, 3, 4];
+    var all = (base.lanes || []);
+    var lanesSel = (v && Array.isArray(v.lanes) && v.lanes.length) ? v.lanes.map(Number) : all.map(laneNum);
     var mode = base.lanesMode === 'filter' ? 'filter' : 'mark';
-    var marking = isVenue && lanesSel.length < 4 && mode === 'mark';
-    var lanes = (base.lanes || []).filter(function (l) {
-      return mode === 'mark' || !isVenue || lanesSel.indexOf(Number(l.id)) > -1;
+    var marking = isVenue && lanesSel.length < all.length && mode === 'mark';
+    var lanes = all.filter(function (l) {
+      return mode === 'mark' || !isVenue || lanesSel.indexOf(laneNum(l)) > -1;
     }).map(function (l) {
-      return { id: l.id, title: l.title, line: l.line, avail: marking && lanesSel.indexOf(Number(l.id)) > -1 };
+      return { id: laneNum(l), title: l.title, line: l.text || l.line, icon: l.icon || '',
+               avail: marking && lanesSel.indexOf(laneNum(l)) > -1 };
     });
     var venueName = isVenue ? v.venue : get(base, 'card.baseVenue', 'השרון והמרכז');
     var waText = isVenue ? (v.waText || defaultWaText(v.venue)) : get(base, 'contact.waText', '');
@@ -238,18 +295,44 @@
     return '<div class="mv-rope" aria-hidden="true">' + i + '</div>';
   }
 
+  function laneIco(l) {
+    var map = LANE_ICON[l.id] || {};
+    var over = String(l.icon || '').trim();
+    if (over === 'none') return '';
+    var anim = /^lane[1-4]$/.test(over) ? over : map.anim;
+    var art = /^lane-[a-z]+$/.test(over) ? over : map.art;
+    if (!art) return '';
+    return '<span class="mv-lane-ico"' + (anim ? ' data-lottie="' + anim + '"' : '') + ' aria-hidden="true">' +
+      '<svg class="mv-static" viewBox="0 0 120 120" focusable="false"><use href="#mv-i-' + art + '"/></svg></span>';
+  }
+
+  /* One quiet line, not a banner: where the lesson happens. */
+  function convLine(base) {
+    var c = base.convenience;
+    if (!c) return '';
+    if (typeof c === 'string') c = { text: c };
+    if (Array.isArray(c)) c = { text: c.filter(Boolean).join(' · ') };
+    var label = String(c.label || c.title || '').trim();
+    var text = String(c.text || c.line || '').trim();
+    if (!label && !text) return '';
+    return '<p class="mv-conv">' + icon('pin') +
+      (label ? '<b>' + esc(label) + '</b>' : '') +
+      (label && text ? '<i aria-hidden="true">·</i>' : '') +
+      (text ? '<span>' + esc(text) + '</span>' : '') + '</p>';
+  }
+
   function lanesSec(base, m) {
     var items = m.lanes.map(function (l) {
       return '<li class="mv-lane' + (l.avail ? ' is-avail' : '') + (m.marking && !l.avail ? ' is-dim' : '') + '">' +
-        '<div class="mv-lane-head"><span class="mv-lane-num">' + esc(l.id) + '</span>' +
-          '<span class="mv-lane-ico" data-lottie="lane' + esc(l.id) + '" aria-hidden="true"></span></div>' +
+        '<div class="mv-lane-head"><span class="mv-lane-num">' + esc(l.id) + '</span>' + laneIco(l) + '</div>' +
         '<div class="mv-lane-body"><h3>' + esc(l.title) + '</h3><p>' + esc(l.line) + '</p>' +
           (l.avail ? '<span class="mv-tag">' + icon('check') + esc(base.laneAvailable || 'זמין אצלכם') + '</span>' : '') +
         '</div></li>';
     }).join('');
     return '<section class="mv-sec" aria-labelledby="mv-lanes-h"><div class="mv-wrap">' +
-      '<h2 class="mv-h2" id="mv-lanes-h">' + esc(base.lanesTitle || 'ארבעה מסלולים') + '</h2>' +
-      '<ol class="mv-lanes">' + items + '</ol>' +
+      '<h2 class="mv-h2" id="mv-lanes-h">' + esc(base.lanesTitle || 'המסלולים') + '</h2>' +
+      '<ol class="mv-lanes" data-count="' + m.lanes.length + '">' + items + '</ol>' +
+      convLine(base) +
       (base.lanesClosing && !base.bandPhoto ? '<p class="mv-lanes-close">' + esc(base.lanesClosing) + '</p>' : '') +
       '</div></section>';
   }
@@ -272,6 +355,11 @@
   }
   MV.credList = credList;
 
+  function aboutText(t) {
+    var parts = Array.isArray(t) ? t : (t ? [t] : []);
+    return parts.map(function (x) { return '<p class="mv-about-p">' + esc(x) + '</p>'; }).join('');
+  }
+
   function aboutSec(base) {
     var a = base.about || {};
     var creds = [];
@@ -279,10 +367,29 @@
       '<img src="' + esc(a.photo) + '" alt="' + esc(a.photoAlt || '') + '" width="364" height="495" loading="lazy" decoding="async"></figure>' : '';
     var band = creds.length ? '<ul class="mv-creds" aria-label="' + esc(a.credentialsLabel || 'הישגים ותפקידים') + '">' +
       creds.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' : '';
-    if (!a.title && !a.text && !band) return '';
+    if (!a.title && !(Array.isArray(a.text) ? a.text.length : a.text) && !band) return '';
     return '<section class="mv-sec" aria-labelledby="mv-about-h"><div class="mv-wrap mv-about' + (band ? ' has-creds' : '') + (photo ? ' has-photo' : '') + '">' +
       '<div class="mv-about-text"><h2 class="mv-h2" id="mv-about-h">' + esc(a.title || 'קצת עליי') + '</h2>' +
-      (a.text ? '<p class="mv-about-p">' + esc(a.text) + '</p>' : '') + '</div>' + band + photo + '</div></section>';
+      aboutText(a.text) + '</div>' + band + photo + '</div></section>';
+  }
+
+  /* "למי זה מתאים": a quiet checklist. Two columns on a wide pane, read down
+     each column, one column on a phone. Each item gets an aqua bead with a tick. */
+  function fitSec(base) {
+    var f = base.fit || {};
+    var items = (Array.isArray(f.items) ? f.items : [])
+      .map(function (x) { return String(x == null ? '' : (x.text || x.title || x)).trim(); })
+      .filter(Boolean).slice(0, 8);
+    if (!items.length) return '';
+    var rows = Math.ceil(items.length / 2);
+    var list = '<ul class="mv-fit-list" style="--fit-rows:' + rows + '">' +
+      items.map(function (x) {
+        return '<li><span class="mv-fit-b" aria-hidden="true">' + icon('check') + '</span><span>' + esc(x) + '</span></li>';
+      }).join('') + '</ul>';
+    return '<section class="mv-sec mv-fit" aria-labelledby="mv-fit-h"><div class="mv-wrap">' +
+      '<h2 class="mv-h2" id="mv-fit-h">' + esc(f.title || 'למי זה מתאים') + '</h2>' + list +
+      (f.note ? '<p class="mv-fit-note">' + esc(f.note) + '</p>' : '') +
+      '</div></section>';
   }
 
   function talkSec(base, m) {
@@ -354,6 +461,7 @@
       noteCard(base, m) +
       rope() +
       lanesSec(base, m) +
+      fitSec(base) +
       poolBand(base) +
       aboutSec(base) +
       talkSec(base, m) +

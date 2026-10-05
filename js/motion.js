@@ -111,15 +111,19 @@
         if (/^lane\d$/.test(name)) {
           if (still) { lastFrame(anim); return; }
           anim.goToAndStop(0, true);
-          var idx = parseInt(name.slice(4), 10) - 1;
+          // stagger by the lane's place on the page, not by the file name: the
+          // four animations are mapped to the lanes they fit, not one per slot.
+          var card = node.closest('.mv-lane');
+          var idx = card && card.parentNode ? Array.prototype.indexOf.call(card.parentNode.children, card) : 0;
+          if (idx < 0) idx = 0;
           var io2 = new IntersectionObserver(function (en) {
             if (en[0].isIntersecting) {
               timers.push(setTimeout(function () { anim.goToAndPlay(0, true); }, idx * 120));
               io2.disconnect();
             }
           }, { threshold: 0.4 });
-          io2.observe(node.closest('.mv-lane') || node); observers.push(io2);
-          var lane = node.closest('.mv-lane');
+          io2.observe(card || node); observers.push(io2);
+          var lane = card;
           if (lane && global.matchMedia && global.matchMedia('(hover: hover)').matches) {
             lane.addEventListener('mouseenter', function () { if (anim.isPaused) anim.goToAndPlay(0, true); });
           }

@@ -224,7 +224,7 @@
   }
   function blankPage() {
     return { id: null, slug: '', venue: '', greeting: '', note: '', details: '', offer: '', waText: '', ogTitle: '',
-      lanes: [1, 2, 3, 4], heroUrl: '', heroVideo: '', shareText: '', status: 'draft', publishedAt: null };
+      lanes: [1, 2, 3, 4, 5], heroUrl: '', heroVideo: '', shareText: '', status: 'draft', publishedAt: null };
   }
   function duplicate(id) {
     return store.duplicatePage(id).then(function (p) { toast(T.tDuplicated); openEditor(p); });
@@ -239,6 +239,7 @@
     if (f.lanes) {
       var lanes = (MV.withDefaults(base).lanes || base.lanes || []);
       ctl = '<div class="st-lanes" role="group" aria-labelledby="' + id + '-l" aria-describedby="' + id + '-h">' + lanes.map(function (l) {
+        l = { id: MV.laneNum(l), title: l.title, line: l.text || l.line };
         var on = (p.lanes || []).map(Number).indexOf(Number(l.id)) > -1;
         return '<label class="st-switch"><input type="checkbox" role="switch" name="lane" value="' + esc(l.id) + '"' + (on ? ' checked' : '') + '>' +
           '<span class="st-switch-ui" aria-hidden="true"></span><span class="st-switch-n">' + esc(l.id) + '</span><span class="st-switch-t">' + esc(l.title) + '</span></label>';
